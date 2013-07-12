@@ -97,11 +97,6 @@ namespace Spoti15
         public const int ColorWidth = LcdPinvoke.LOGI_LCD_COLOR_WIDTH;
         public const int ColorHeight = LcdPinvoke.LOGI_LCD_COLOR_HEIGHT;
 
-        public static bool IsConnected(LcdType lcdtype)
-        {
-            return LcdPinvoke.LogiLcdIsConnected((int)lcdtype);
-        }
-
         private static bool hasInstance = false;
         private bool disposed = false;
 
@@ -134,6 +129,11 @@ namespace Spoti15
         ~LogiLcd()
         {
             Dispose();
+        }
+
+        public bool IsConnected(LcdType lcdtype)
+        {
+            return LcdPinvoke.LogiLcdIsConnected((int)lcdtype);
         }
 
         public bool IsButtonPressed(LcdButton button)
