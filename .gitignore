@@ -3,4 +3,3 @@ bin/
 obj/
 publish/
 *.csproj.user
-*_TemporaryKey.pfx
