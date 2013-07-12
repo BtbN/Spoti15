@@ -17,12 +17,12 @@ namespace Spoti15
 
         private Timer spotTimer;
         private Timer lcdTimer;
+        private Timer refreshTimer;
 
 
         public Spoti15()
         {
-            api = new SpotifyAPI(SpotifyAPI.GetOAuth());
-            cfid = api.CFID;
+            InitSpot();
 
             lcd = new LogiLcd("Spoti15");
 
@@ -36,6 +36,11 @@ namespace Spoti15
             lcdTimer.Enabled = true;
             lcdTimer.Tick += OnLcdTimer;
 
+            refreshTimer = new Timer();
+            refreshTimer.Interval = 300000;
+            refreshTimer.Enabled = true;
+            refreshTimer.Tick += OnRefreshTimer;
+
             UpdateSpot();
             UpdateLcd();
         }
@@ -45,9 +50,20 @@ namespace Spoti15
             UpdateSpot();
         }
 
+        private bool btnBefore = false;
         private void OnLcdTimer(object source, EventArgs e)
         {
+            bool btnNow = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono0);
+            if (btnNow && !btnBefore)
+                InitSpot();
+            btnBefore = btnNow;
+
             UpdateLcd();
+        }
+
+        private void OnRefreshTimer(object source, EventArgs e)
+        {
+            InitSpot();
         }
 
         public void Dispose()
@@ -64,6 +80,16 @@ namespace Spoti15
             lcdTimer.Enabled = false;
             lcdTimer.Dispose();
             lcdTimer = null;
+
+            refreshTimer.Enabled = false;
+            refreshTimer.Dispose();
+            refreshTimer = null;
+        }
+
+        private void InitSpot()
+        {
+            api = new SpotifyAPI(SpotifyAPI.GetOAuth());
+            cfid = api.CFID;
         }
 
         public void UpdateSpot()
