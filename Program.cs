@@ -4,16 +4,64 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using System.ServiceModel;
 
 namespace Spoti15
 {
+    [ServiceContract]
+    public interface ISpoti15WCF
+    {
+        [OperationContract]
+        bool Shutdown();
+
+        [OperationContract]
+        bool ShowTray();
+    }
+
+    class Spoti15WcfImpl : ISpoti15WCF
+    {
+        public bool Shutdown()
+        {
+            Program.Shutdown();
+            return true;
+        }
+
+        public bool ShowTray()
+        {
+            Program.ShowTray();
+            return true;
+        }
+    }
+
     class Program
     {
         private static NotifyIcon notico;
         private static MenuItem autostartItem;
+        private static ServiceHost host;
 
         static void Main(string[] args)
         {
+            using (ChannelFactory<ISpoti15WCF> spotFactory = new ChannelFactory<ISpoti15WCF>(new NetNamedPipeBinding(), new EndpointAddress("net.pipe://localhost/Spoti15WCF")))
+            {
+                try
+                {
+                    ISpoti15WCF iface = spotFactory.CreateChannel();
+                    iface.Shutdown();
+                    spotFactory.Close();
+
+                    System.Threading.Thread.Sleep(1000);
+                }
+                catch
+                {
+                    spotFactory.Abort();
+                    spotFactory.Close();
+                }
+            }
+
+            host = new ServiceHost(typeof(Spoti15WcfImpl), new Uri[] { new Uri("net.pipe://localhost") });
+            host.AddServiceEndpoint(typeof(ISpoti15WCF), new NetNamedPipeBinding(), "Spoti15WCF");
+            host.Open();
+
             if (args.Length == 0 || args[0] != "-autostart")
             {
                 Properties.Settings.Default.HideIcon = false;
@@ -51,8 +99,9 @@ namespace Spoti15
             Spoti15 spoti15 = new Spoti15();
 
             Application.Run();
-
+                        
             GC.KeepAlive(spoti15);
+            host.Close();
         }
 
         private static void AutostartClick(Object sender, EventArgs e)
@@ -73,9 +122,24 @@ namespace Spoti15
             notico.Visible = false;
         }
 
+        public static void ShowTray()
+        {
+            Properties.Settings.Default.HideIcon = false;
+            Properties.Settings.Default.Save();
+
+            notico.Visible = true;
+        }
+
         private static void ExitClick(Object sender, EventArgs e)
         {
-            notico.Dispose();
+            Shutdown();
+        }
+
+        public static void Shutdown()
+        {
+            if(notico != null)
+                notico.Dispose();
+
             Application.Exit();
         }
     }
