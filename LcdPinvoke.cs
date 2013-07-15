@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 namespace Spoti15
@@ -152,6 +154,37 @@ namespace Spoti15
                 throw new LogiLcdException("Bitmap size does not match expected size");
 
             return LcdPinvoke.LogiLcdMonoSetBackground(monoBitmap);
+        }
+
+        public bool MonoSetBackground(Bitmap bitmap)
+        {
+            if (bitmap.PixelFormat != PixelFormat.Format32bppArgb)
+                throw new LogiLcdException("Bitmap PixelFormat has to be 32bppArgb");
+
+            if (bitmap.Width != MonoWidth || bitmap.Height != MonoHeight)
+                throw new LogiLcdException("Bitmap size does not match the mono LCD size");
+
+            BitmapData data = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
+
+            int srcBytes = Math.Abs(data.Stride) * bitmap.Height;
+            Byte[] rgbData = new Byte[srcBytes];
+            Marshal.Copy(data.Scan0, rgbData, 0, srcBytes);
+
+            Byte[] resultData = new Byte[bitmap.Width * bitmap.Height];
+
+            for (int y = 0, ypos = 0; y < bitmap.Height; ++y, ypos += Math.Abs(data.Stride))
+                for (int x = 0, pos = ypos; x < bitmap.Width; ++x, pos += 4)
+                {
+                    byte b = rgbData[pos + 0];
+                    byte g = rgbData[pos + 1];
+                    byte r = rgbData[pos + 2];
+
+                    resultData[y * bitmap.Width + x] = (byte)((0.2125 * r) + (0.7154 * g) + (0.0721 * b));
+                }
+
+            bitmap.UnlockBits(data);
+
+            return MonoSetBackground(resultData);
         }
 
         public bool MonoSetText(int lineNumber, string text)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Drawing;
 using JariZ;
 
 namespace Spoti15
@@ -166,6 +167,23 @@ namespace Spoti15
         private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
         public void UpdateLcd()
         {
+            Bitmap tmpImg = new Bitmap(LogiLcd.MonoWidth, LogiLcd.MonoHeight);
+            using (Graphics g = Graphics.FromImage(tmpImg))
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
+                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
+
+                g.FillRectangle(Brushes.Black, 0, 0, tmpImg.Width, tmpImg.Height);
+                g.DrawString("Das ist ein Test", new Font("Courier", 8), Brushes.White, 0, 0);
+            }
+
+            tmpImg.Save(@"D:\tmpImg.bmp");
+
+            lcd.MonoSetBackground(tmpImg);
+            lcd.Update();
+            return;
+
             if (initExcpt != null)
             {
                 lcd.MonoSetBackground(emptyBg);
