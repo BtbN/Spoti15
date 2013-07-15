@@ -12,6 +12,7 @@ namespace Spoti15
         private SpotifyAPI api;
         private Responses.CFID cfid;
         Responses.Status currentStatus;
+        private Exception initExcpt;
 
         private LogiLcd lcd;
 
@@ -22,6 +23,8 @@ namespace Spoti15
 
         public Spoti15()
         {
+            initExcpt = null;
+
             InitSpot();
 
             lcd = new LogiLcd("Spoti15");
@@ -84,17 +87,37 @@ namespace Spoti15
             refreshTimer.Enabled = false;
             refreshTimer.Dispose();
             refreshTimer = null;
+
+            initExcpt = null;
         }
 
         private void InitSpot()
         {
-            api = new SpotifyAPI(SpotifyAPI.GetOAuth());
-            cfid = api.CFID;
+            try
+            {
+                api = new SpotifyAPI(SpotifyAPI.GetOAuth());
+                cfid = api.CFID;
+                initExcpt = null;
+            }
+            catch (Exception e)
+            {
+                initExcpt = e;
+            }
         }
 
         public void UpdateSpot()
         {
-            currentStatus = api.Status;
+            if(initExcpt != null)
+                return;
+
+            try
+            {
+                currentStatus = api.Status;
+            }
+            catch (Exception e)
+            {
+                initExcpt = e;
+            }
         }
 
         private uint scrollStep = 0;
@@ -143,8 +166,21 @@ namespace Spoti15
         private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
         public void UpdateLcd()
         {
+            if (initExcpt != null)
+            {
+                lcd.MonoSetBackground(emptyBg);
+                lcd.MonoSetText(0, "Exception:");
+                lcd.MonoSetText(1, initExcpt.GetType().ToString());
+                lcd.MonoSetText(2, initExcpt.Message.Substring(0, 26));
+                lcd.MonoSetText(3, initExcpt.Message.Substring(26));
+
+                lcd.Update();
+                return;
+            }
+
             if (cfid.error != null)
             {
+                lcd.MonoSetBackground(emptyBg);
                 lcd.MonoSetText(0, "SpotifyError:");
                 lcd.MonoSetText(1, cfid.error.message);
                 lcd.MonoSetText(2, string.Format("Type: 0x{0}", cfid.error.type));

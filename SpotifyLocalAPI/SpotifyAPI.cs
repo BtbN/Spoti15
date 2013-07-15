@@ -176,7 +176,7 @@ namespace JariZ
         }
 
         /// <summary>
-        /// Recieves a OAuth key from the Spotify site
+        /// Recieves an OAuth key from the Spotify site
         /// </summary>
         /// <returns></returns>
         public static string GetOAuth()
