@@ -1,10 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+using System.Collections;
 using System.Drawing;
+using System.Drawing.Text;
+using System.Globalization;
+using System.Resources;
 using System.ServiceModel;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace Spoti15
 {
@@ -35,6 +37,56 @@ namespace Spoti15
 
     class Program
     {
+        private static PrivateFontCollection pFonts = new PrivateFontCollection();
+
+        public static FontFamily[] FontFamilies
+        {
+            get
+            {
+                if(pFonts.Families.Length == 0)
+                    LoadFonts();
+
+                return pFonts.Families;
+            }
+        }
+
+        public static FontFamily GetFontFamily(string family)
+        {
+            family = family.ToLower();
+
+            foreach(FontFamily f in FontFamilies)
+            {
+                Console.WriteLine(f.Name);
+
+                if(f.Name.ToLower() == family)
+                {
+                    return f;
+                }
+            }
+
+            return null;
+        }
+
+        public static void LoadFonts()
+        {
+            ResourceSet res = Properties.Resources.ResourceManager.GetResourceSet(CultureInfo.CurrentUICulture, true, true);
+            foreach (DictionaryEntry entry in res)
+            {
+                string resKey = (String)entry.Key;
+                if (resKey == null || !resKey.StartsWith("font_"))
+                    continue;
+
+                byte[] resVal = (byte[])entry.Value;
+
+                IntPtr data = Marshal.AllocCoTaskMem(resVal.Length);
+                Marshal.Copy(resVal, 0, data, resVal.Length);
+
+                pFonts.AddMemoryFont(data, resVal.Length);
+
+                Marshal.FreeCoTaskMem(data);
+            }
+        }
+
         private static NotifyIcon notico;
         private static MenuItem autostartItem;
         private static ServiceHost host;

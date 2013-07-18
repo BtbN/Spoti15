@@ -178,8 +178,6 @@ namespace Spoti15
                 g.DrawString("Das ist ein Test", new Font("Courier", 8), Brushes.White, 0, 0);
             }
 
-            tmpImg.Save(@"D:\tmpImg.bmp");
-
             lcd.MonoSetBackground(tmpImg);
             lcd.Update();
             return;
