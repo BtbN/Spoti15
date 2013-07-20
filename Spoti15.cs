@@ -21,6 +21,7 @@ namespace Spoti15
         private Timer lcdTimer;
         private Timer refreshTimer;
 
+        private uint scrollStep = 0;
 
         public Spoti15()
         {
@@ -63,6 +64,7 @@ namespace Spoti15
             btnBefore = btnNow;
 
             UpdateLcd();
+            scrollStep += 1;
         }
 
         private void OnRefreshTimer(object source, EventArgs e)
@@ -121,88 +123,105 @@ namespace Spoti15
             }
         }
 
-        private uint scrollStep = 0;
-        private string scrollText(string input)
+        private Bitmap bgBitmap = new Bitmap(LogiLcd.MonoWidth, LogiLcd.MonoHeight);
+        private Font mainFont = new Font(Program.GetFontFamily("8pxbus"), 10, GraphicsUnit.Pixel);
+        private Color bgColor = Color.Black;
+        private Color fgColor = Color.White;
+        private Brush bgBrush = Brushes.Black;
+        private Brush fgBrush = Brushes.White;
+
+        private void SetupGraphics(Graphics g)
         {
-            if (input.Length < 26)
-            {
-                while (input.Length < 26)
-                    input = " " + input + " ";
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+            g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
+            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+            g.PageUnit = GraphicsUnit.Pixel;
+            g.TextContrast = 0;
 
-                return input;
-            }
-
-            if (input.Length > 26)
-            {
-                long ocut = input.Length - 26;
-                long cut = (scrollStep / 5) % (ocut + 10) - 5;
-
-                if (cut < 0)
-                    cut = 0;
-                if (cut > ocut)
-                    cut = ocut;
-
-                return input.Substring((int)cut);
-            }
-
-            return input;
+            g.Clear(bgColor);
         }
 
-        private bool onBorder(int x1, int y1, int x2, int y2, int x, int y)
+        private void DrawText(Graphics g, int line, string text, Font fnt, int offset = 0)
         {
-            if (x >= x1 && x <= x2 && (y == y1 || y == y2))
-                return true;
-            if (y >= y1 && y <= y2 && (x == x1 || x == x2))
-                return true;
-            return false;
+            int x = offset;
+            int y = line * 10;
+            TextRenderer.DrawText(g, text, fnt, new Point(x, y), fgColor);
         }
 
-        private bool inBorder(int x1, int y1, int x2, int y2, int x, int y)
+        private void DrawTextScroll(Graphics g, int line, string text, Font fnt, bool center = true)
         {
-            if (x > x1 && x < x2 && y > y1 && y < y2)
-                return true;
-            return false;
+            Size textSize = TextRenderer.MeasureText(text, fnt);
+
+            if (textSize.Width <= LogiLcd.MonoWidth)
+            {
+                if (center)
+                {
+                    int offset = (LogiLcd.MonoWidth - textSize.Width) / 2;
+                    DrawText(g, line, text, fnt, offset);
+                }
+                else
+                {
+                    DrawText(g, line, text, fnt);
+                }
+
+                return;
+            }
+
+            int olen = textSize.Width - LogiLcd.MonoWidth;
+            int len = (int)((scrollStep / 2) % (olen + 20) - 10);
+
+            if (len < 0)
+                len = 0;
+            if (len > olen)
+                len = olen;
+
+            DrawText(g, line, text, fnt, -len);
+        }
+
+        private void DrawTextScroll(Graphics g, int line, string text, bool center = true)
+        {
+            DrawTextScroll(g, line, text, mainFont, center);
+        }
+
+        private void DrawText(Graphics g, int line, string text, int offset = 0)
+        {
+            DrawText(g, line, text, mainFont, offset);
+        }
+
+        private void DoRender()
+        {
+            lcd.MonoSetBackground(bgBitmap);
+            lcd.Update();
         }
 
         private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
         public void UpdateLcd()
         {
-            Bitmap tmpImg = new Bitmap(LogiLcd.MonoWidth, LogiLcd.MonoHeight);
-            using (Graphics g = Graphics.FromImage(tmpImg))
-            {
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
-                g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.None;
-                g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.SingleBitPerPixel;
-
-                g.FillRectangle(Brushes.Black, 0, 0, tmpImg.Width, tmpImg.Height);
-                g.DrawString("Das ist ein Test", new Font("Courier", 8), Brushes.White, 0, 0);
-            }
-
-            lcd.MonoSetBackground(tmpImg);
-            lcd.Update();
-            return;
-
             if (initExcpt != null)
             {
-                lcd.MonoSetBackground(emptyBg);
-                lcd.MonoSetText(0, "Exception:");
-                lcd.MonoSetText(1, initExcpt.GetType().ToString());
-                lcd.MonoSetText(2, initExcpt.Message.Substring(0, 26));
-                lcd.MonoSetText(3, initExcpt.Message.Substring(26));
+                using (Graphics g = Graphics.FromImage(bgBitmap))
+                {
+                    SetupGraphics(g);
+                    DrawText(g, 0, "Exception:");
+                    DrawText(g, 1, initExcpt.GetType().ToString());
+                    DrawTextScroll(g, 2, initExcpt.Message, false);
+                }
 
-                lcd.Update();
+                DoRender();
                 return;
             }
 
             if (cfid.error != null)
             {
-                lcd.MonoSetBackground(emptyBg);
-                lcd.MonoSetText(0, "SpotifyError:");
-                lcd.MonoSetText(1, cfid.error.message);
-                lcd.MonoSetText(2, string.Format("Type: 0x{0}", cfid.error.type));
-                lcd.MonoSetText(3, "");
+                using (Graphics g = Graphics.FromImage(bgBitmap))
+                {
+                    SetupGraphics(g);
+                    DrawText(g, 0, "SpotifyError:");
+                    DrawTextScroll(g, 1, cfid.error.message, false);
+                    DrawText(g, 2, String.Format("Type: 0x{0}", cfid.error.type));
+                }
 
-                lcd.Update();
+                DoRender();
                 return;
             }
 
@@ -212,48 +231,28 @@ namespace Spoti15
                 int pos = (int)currentStatus.playing_position;
                 double perc = currentStatus.playing_position / currentStatus.track.length;
 
-                Byte[] bg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
-                for(int y = 0; y < LogiLcd.MonoHeight; ++y)
-                    for (int x = 0; x < LogiLcd.MonoWidth; ++x)
-                    {
-                        int ap = y * LogiLcd.MonoWidth + x;
+                using (Graphics g = Graphics.FromImage(bgBitmap))
+                {
+                    SetupGraphics(g);
+                    DrawTextScroll(g, 0, currentStatus.track.artist_resource.name + " - " + currentStatus.track.album_resource.name);
+                    DrawTextScroll(g, 1, currentStatus.track.track_resource.name);
+                    DrawTextScroll(g, 3, String.Format("{0}:{1:D2}/{2}:{3:D2}", pos/60, pos%60, len/60, len%60));
 
-                        if (onBorder(3, 22, 156, 26, x, y))
-                        {
-                            bg[ap] = 255;
-                        }
-                        else if (inBorder(3, 22, 156, 26, x, y))
-                        {
-                            double lperc = (x - 4.0) / (151.0);
-                            if(lperc < perc)
-                                bg[ap] = 255;
-                            else
-                                bg[ap] = 0;
-                        }
-                        else
-                        {
-                            bg[ap] = 0;
-                        }
-                    }
-
-                lcd.MonoSetBackground(bg);
-
-                lcd.MonoSetText(0, scrollText(currentStatus.track.artist_resource.name + " - " + currentStatus.track.album_resource.name));
-                lcd.MonoSetText(1, scrollText(currentStatus.track.track_resource.name));
-                lcd.MonoSetText(2, "");
-                lcd.MonoSetText(3, scrollText(String.Format("{0}:{1:D2}/{2}:{3:D2}", pos/60, pos%60, len/60, len%60)));
+                    g.DrawRectangle(Pens.White, 3, 24, LogiLcd.MonoWidth - 6, 4);
+                    g.FillRectangle(Brushes.White, 3, 24, (int)((LogiLcd.MonoWidth - 6) * perc), 4);
+                }
             }
             else
             {
-                lcd.MonoSetBackground(emptyBg);
-                lcd.MonoSetText(0, scrollText("                            Spoti15                          "));
-                lcd.MonoSetText(1, scrollText("Spotify not playing"));
-                lcd.MonoSetText(2, scrollText(""));
-                lcd.MonoSetText(3, scrollText("                            Spoti15                          "));
+                using (Graphics g = Graphics.FromImage(bgBitmap))
+                {
+                    SetupGraphics(g);
+                    DrawTextScroll(g, 1, "Spotify not playing");
+                    DrawTextScroll(g, 3, "                            Spoti15                          ");
+                }
             }
 
-            lcd.Update();
-            scrollStep += 1;
+            DoRender();
         }
     }
 }

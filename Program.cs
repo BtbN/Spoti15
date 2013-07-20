@@ -56,8 +56,6 @@ namespace Spoti15
 
             foreach(FontFamily f in FontFamilies)
             {
-                Console.WriteLine(f.Name);
-
                 if(f.Name.ToLower() == family)
                 {
                     return f;
