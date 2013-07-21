@@ -152,7 +152,7 @@ namespace Spoti15
         {
             Size textSize = TextRenderer.MeasureText(text, fnt);
 
-            if (textSize.Width <= LogiLcd.MonoWidth)
+            if (textSize.Width <= LogiLcd.MonoWidth + 2)
             {
                 if (center)
                 {
@@ -167,9 +167,13 @@ namespace Spoti15
                 return;
             }
 
-            int olen = textSize.Width - LogiLcd.MonoWidth;
-            int len = (int)((scrollStep / 2) % (olen + 20) - 10);
+            int pxstep = 4;
+            int speed = 5;
+            int prewait = 5;
+            int postwait = 5;
 
+            int olen = textSize.Width - LogiLcd.MonoWidth;
+            int len = pxstep * (int)((scrollStep / speed) % ((olen / pxstep) + prewait + postwait) - prewait);
             if (len < 0)
                 len = 0;
             if (len > olen)

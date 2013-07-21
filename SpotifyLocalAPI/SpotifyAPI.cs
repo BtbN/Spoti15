@@ -13,6 +13,9 @@ namespace JariZ
         private string _oauth;
         private string _host;
         private string _cfid;
+
+        private WebClient wc;
+
         /// <summary>
         /// Initializes a new SpotifyAPI object which can be used to recieve
         /// </summary>
@@ -22,6 +25,9 @@ namespace JariZ
         {
             _oauth = OAuth;
             _host = Host;
+
+            wc = new WebClient();
+            wc.Encoding = Encoding.UTF8;
 
             //emulate the embed code [NEEDED]
             wc.Headers.Add("Origin", "https://embed.spotify.com");
@@ -68,8 +74,6 @@ namespace JariZ
                 return Convert.ToInt32((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0)).TotalSeconds);
             }
         }
-
-        WebClient wc = new WebClient();
 
         /// <summary>
         /// Gets the 'CFID', a unique identifier for the current session.
