@@ -229,28 +229,37 @@ namespace Spoti15
                 return;
             }
 
-            int len = currentStatus.track.length;
-            int pos = (int)currentStatus.playing_position;
-            double perc = currentStatus.playing_position / currentStatus.track.length;
-
             using (Graphics g = Graphics.FromImage(bgBitmap))
             {
                 SetupGraphics(g);
-                DrawTextScroll(g, 0, currentStatus.track.artist_resource.name + " - " + currentStatus.track.album_resource.name);
-                DrawTextScroll(g, 1, currentStatus.track.track_resource.name);
-                DrawTextScroll(g, 3, String.Format("{0}:{1:D2}/{2}:{3:D2}", pos/60, pos%60, len/60, len%60));
 
-                g.DrawRectangle(Pens.White, 3, 24, LogiLcd.MonoWidth - 6, 4);
-                g.FillRectangle(Brushes.White, 3, 24, (int)((LogiLcd.MonoWidth - 6) * perc), 4);
-
-                if (currentStatus.playing)
+                try
                 {
-                    g.FillPolygon(Brushes.White, new Point[]{new Point(3, 40), new Point(3, 30), new Point(8, 35)});
+                    int len = currentStatus.track.length;
+                    int pos = (int)currentStatus.playing_position;
+                    double perc = currentStatus.playing_position / currentStatus.track.length;
+
+                    DrawTextScroll(g, 0, currentStatus.track.artist_resource.name + " - " + currentStatus.track.album_resource.name);
+                    DrawTextScroll(g, 1, currentStatus.track.track_resource.name);
+                    DrawTextScroll(g, 3, String.Format("{0}:{1:D2}/{2}:{3:D2}", pos / 60, pos % 60, len / 60, len % 60));
+
+                    g.DrawRectangle(Pens.White, 3, 24, LogiLcd.MonoWidth - 6, 4);
+                    g.FillRectangle(Brushes.White, 3, 24, (int)((LogiLcd.MonoWidth - 6) * perc), 4);
+
+                    if (currentStatus.playing)
+                    {
+                        g.FillPolygon(Brushes.White, new Point[] { new Point(3, 40), new Point(3, 30), new Point(8, 35) });
+                    }
+                    else
+                    {
+                        g.FillRectangle(Brushes.White, new Rectangle(3, 32, 2, 7));
+                        g.FillRectangle(Brushes.White, new Rectangle(6, 32, 2, 7));
+                    }
                 }
-                else
+                catch (NullReferenceException)
                 {
-                    g.FillRectangle(Brushes.White, new Rectangle(3, 32, 2, 7));
-                    g.FillRectangle(Brushes.White, new Rectangle(6, 32, 2, 7));
+                    g.Clear(bgColor);
+                    DrawTextScroll(g, 1, "No track information available", false);
                 }
             }
 
