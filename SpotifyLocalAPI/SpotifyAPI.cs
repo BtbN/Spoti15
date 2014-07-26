@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 
 namespace JariZ
 {
@@ -28,7 +29,7 @@ namespace JariZ
 
             wc = new WebClient();
             wc.Encoding = Encoding.UTF8;
-
+            wc.Headers.Add("User-Agent: SpotifyAPI");
             //emulate the embed code [NEEDED]
             wc.Headers.Add("Origin", "https://embed.spotify.com");
             wc.Headers.Add("Referer", "https://embed.spotify.com/?uri=spotify:track:5Zp4SWOpbuOdnsxLqwgutt");
@@ -43,7 +44,9 @@ namespace JariZ
         {
             try
             {
-                string raw = new WebClient().DownloadString("http://open.spotify.com/album/" + uri.Split(new string[] { ":" }, StringSplitOptions.None)[2]);
+                var wc = new WebClient();
+                wc.Headers.Add("User-Agent: SpotifyAPI");
+                string raw = wc.DownloadString("http://open.spotify.com/album/" + uri.Split(new string[] { ":" }, StringSplitOptions.None)[2]);
                 raw = raw.Replace("\t", ""); ;
                 string[] lines = raw.Split(new string[] { "\n" }, StringSplitOptions.None);
                 foreach (string line in lines)
@@ -185,19 +188,17 @@ namespace JariZ
         /// <returns></returns>
         public static string GetOAuth()
         {
-            string raw = new WebClient().DownloadString("https://embed.spotify.com/openplay/?uri=spotify:track:5Zp4SWOpbuOdnsxLqwgutt");
-            raw = raw.Replace(" ", "");
-            string[] lines = raw.Split(new string[] { "\n" }, StringSplitOptions.None);
-            foreach (string line in lines)
-            {
-                if (line.StartsWith("tokenData"))
-                {
-                    string[] l = line.Split(new string[] { "'" }, StringSplitOptions.None);
-                    return l[1];
-                }
+            var wc = new WebClient();
+            wc.Headers.Add("User-Agent: SpotifyAPI");
+            var raw = wc.DownloadString("https://embed.spotify.com/openplay/?uri=spotify:track:5Zp4SWOpbuOdnsxLqwgutt");
+            try {
+                char[] charsToTrim = { '\'' }; 
+                var line = Regex.Match(raw, @"tokenData ?= ?'[\w-]+',").Groups[0].Value;
+                var token = Regex.Match(line, @"'[\w-]+'").Groups[0].Value.Trim(charsToTrim);
+                return token;
+            } catch(Exception e) {
+                throw new Exception("Could not find OAuth token");    
             }
-
-            throw new Exception("Could not find OAuth token");
         }
 
 
