@@ -186,18 +186,13 @@ namespace JariZ
         public static string GetOAuth()
         {
             string raw = new WebClient().DownloadString("https://embed.spotify.com/openplay/?uri=spotify:track:5Zp4SWOpbuOdnsxLqwgutt");
-            raw = raw.Replace(" ", "");
-            string[] lines = raw.Split(new string[] { "\n" }, StringSplitOptions.None);
-            foreach (string line in lines)
-            {
-                if (line.StartsWith("tokenData"))
-                {
-                    string[] l = line.Split(new string[] { "'" }, StringSplitOptions.None);
-                    return l[1];
-                }
+            try {
+                 string line = Regex.Match(raw, @"tokenData ?= ?'[\w-]+',").Groups[1].Value;
+                 char[] charsToTrim = { '\''};
+                 return Regex.Match(line, @"'[\w-]+'").Groups[1].Value.Trim(charsToTrim);
+            } catch(Exception e) {
+                throw new Exception("Could not find OAuth token");    
             }
-
-            throw new Exception("Could not find OAuth token");
         }
 
 
