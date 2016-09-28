@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
-using JariZ;
+using SpotifyAPI.Local;
+using SpotifyAPI.Local.Enums;
+using SpotifyAPI.Local.Models;
 
 namespace Spoti15
 {
     class Spoti15
     {
-        private SpotifyAPI api;
-        private Responses.CFID cfid;
-        Responses.Status currentStatus;
+        private SpotifyLocalAPI api;
         private Exception initExcpt;
 
         private LogiLcd lcd;
@@ -76,9 +76,6 @@ namespace Spoti15
         {
             lcd.Dispose();
 
-            cfid = null;
-            api = null;
-
             spotTimer.Enabled = false;
             spotTimer.Dispose();
             spotTimer = null;
@@ -98,8 +95,8 @@ namespace Spoti15
         {
             try
             {
-                api = new SpotifyAPI(SpotifyAPI.GetOAuth());
-                cfid = api.CFID;
+                api = new SpotifyLocalAPI();
+                api.Connect();
                 initExcpt = null;
             }
             catch (Exception e)
@@ -112,15 +109,6 @@ namespace Spoti15
         {
             if(initExcpt != null)
                 return;
-
-            try
-            {
-                currentStatus = api.Status;
-            }
-            catch (Exception e)
-            {
-                initExcpt = e;
-            }
         }
 
         private Bitmap bgBitmap = new Bitmap(LogiLcd.MonoWidth, LogiLcd.MonoHeight);
@@ -215,38 +203,25 @@ namespace Spoti15
                 return;
             }
 
-            if (cfid.error != null)
-            {
-                using (Graphics g = Graphics.FromImage(bgBitmap))
-                {
-                    SetupGraphics(g);
-                    DrawText(g, 0, "SpotifyError:");
-                    DrawTextScroll(g, 1, cfid.error.message, false);
-                    DrawText(g, 2, String.Format("Type: 0x{0}", cfid.error.type));
-                }
-
-                DoRender();
-                return;
-            }
-
             using (Graphics g = Graphics.FromImage(bgBitmap))
             {
                 SetupGraphics(g);
 
                 try
                 {
-                    int len = currentStatus.track.length;
-                    int pos = (int)currentStatus.playing_position;
-                    double perc = currentStatus.playing_position / currentStatus.track.length;
+                    StatusResponse status = api.GetStatus();
+                    int len = status.Track.Length;
+                    int pos = (int)status.PlayingPosition;
+                    double perc = status.PlayingPosition / status.Track.Length;
 
-                    DrawTextScroll(g, 0, currentStatus.track.artist_resource.name + " - " + currentStatus.track.album_resource.name);
-                    DrawTextScroll(g, 1, currentStatus.track.track_resource.name);
+                    DrawTextScroll(g, 0, status.Track.ArtistResource.Name + " - " + status.Track.AlbumResource.Name);
+                    DrawTextScroll(g, 1, status.Track.TrackResource.Name);
                     DrawTextScroll(g, 3, String.Format("{0}:{1:D2}/{2}:{3:D2}", pos / 60, pos % 60, len / 60, len % 60));
 
                     g.DrawRectangle(Pens.White, 3, 24, LogiLcd.MonoWidth - 6, 4);
                     g.FillRectangle(Brushes.White, 3, 24, (int)((LogiLcd.MonoWidth - 6) * perc), 4);
 
-                    if (currentStatus.playing)
+                    if (status.Playing)
                     {
                         g.FillPolygon(Brushes.White, new Point[] { new Point(3, 40), new Point(3, 30), new Point(8, 35) });
                     }
