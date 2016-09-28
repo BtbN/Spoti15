@@ -42,7 +42,7 @@ namespace Spoti15
             lcdTimer.Tick += OnLcdTimer;
 
             refreshTimer = new Timer();
-            refreshTimer.Interval = 300000;
+            refreshTimer.Interval = 5000;
             refreshTimer.Enabled = true;
             refreshTimer.Tick += OnRefreshTimer;
 
@@ -95,8 +95,10 @@ namespace Spoti15
         {
             try
             {
-                api = new SpotifyLocalAPI();
-                api.Connect();
+                if (api == null)
+                    api = new SpotifyLocalAPI();
+                if (!api.Connect())
+                    throw new Exception ("Is Spotify Even Running?");
                 initExcpt = null;
             }
             catch (Exception e)
@@ -107,6 +109,7 @@ namespace Spoti15
 
         public void UpdateSpot()
         {
+
             if(initExcpt != null)
                 return;
         }
@@ -187,6 +190,7 @@ namespace Spoti15
         }
 
         private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
+
         public void UpdateLcd()
         {
             if (initExcpt != null)
