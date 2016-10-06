@@ -61,10 +61,10 @@ namespace Spoti15
         private bool btn3Before = false;
         private void OnLcdTimer(object source, EventArgs e)
         {
-            bool btnNow = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono0);
-            if (btnNow && !btn0Before)
+            bool btn0Now = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono0);
+            if (btn0Now && !btn0Before)
                 InitSpot();
-            btn0Before = btnNow;
+            btn0Before = btn0Now;
 
             UpdateLcd();
             scrollStep += 1;
@@ -197,7 +197,7 @@ namespace Spoti15
             lcd.Update();
         }
 
-        private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
+        //private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
 
         public void UpdateLcd()
         {
