@@ -23,6 +23,8 @@ namespace Spoti15
 
         private uint scrollStep = 0;
 
+        private bool showAlbum = true;
+
         public Spoti15()
         {
             initExcpt = null;
@@ -55,16 +57,22 @@ namespace Spoti15
             UpdateSpot();
         }
 
-        private bool btnBefore = false;
+        private bool btn0Before = false;
+        private bool btn3Before = false;
         private void OnLcdTimer(object source, EventArgs e)
         {
             bool btnNow = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono0);
-            if (btnNow && !btnBefore)
+            if (btnNow && !btn0Before)
                 InitSpot();
-            btnBefore = btnNow;
+            btn0Before = btnNow;
 
             UpdateLcd();
             scrollStep += 1;
+
+            bool btn3Now = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono3);
+            if (btn3Now && !btn3Before)
+                showAlbum = !showAlbum;
+            btn3Before = btn3Now;
         }
 
         private void OnRefreshTimer(object source, EventArgs e)
@@ -218,7 +226,10 @@ namespace Spoti15
                     int pos = (int)status.PlayingPosition;
                     double perc = status.PlayingPosition / status.Track.Length;
 
-                    DrawTextScroll(g, 0, status.Track.ArtistResource.Name + " - " + status.Track.AlbumResource.Name);
+                    String lineZero = status.Track.ArtistResource.Name;
+                    if (showAlbum)
+                        lineZero += " - " + status.Track.AlbumResource.Name;
+                    DrawTextScroll(g, 0, lineZero);
                     DrawTextScroll(g, 1, status.Track.TrackResource.Name);
                     DrawTextScroll(g, 3, String.Format("{0}:{1:D2}/{2}:{3:D2}", pos / 60, pos % 60, len / 60, len % 60));
 
