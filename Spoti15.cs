@@ -24,6 +24,7 @@ namespace Spoti15
         private uint scrollStep = 0;
 
         private bool showAlbum = true;
+        private bool showAnimatedLines = true;
 
         public Spoti15()
         {
@@ -58,6 +59,7 @@ namespace Spoti15
         }
 
         private bool btn0Before = false;
+        private bool btn2Before = false;
         private bool btn3Before = false;
         private void OnLcdTimer(object source, EventArgs e)
         {
@@ -69,10 +71,17 @@ namespace Spoti15
             UpdateLcd();
             scrollStep += 1;
 
+            // toggle between "ARTIST - ALBUM" and "ALBUM" on line 1
             bool btn3Now = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono3);
             if (btn3Now && !btn3Before)
                 showAlbum = !showAlbum;
             btn3Before = btn3Now;
+
+            // toggle animated lines within progress bar
+            bool btn2Now = lcd.IsButtonPressed(LogiLcd.LcdButton.Mono2);
+            if (btn2Now && !btn2Before)
+                showAnimatedLines = !showAnimatedLines;
+            btn2Before = btn2Now;
         }
 
         private void OnRefreshTimer(object source, EventArgs e)
@@ -240,14 +249,16 @@ namespace Spoti15
                     g.FillRectangle(Brushes.White, 3, 24, (int)((LogiLcd.MonoWidth - 6) * perc), 4);
 
                     // draw stylistic pattern lines within progress bar
-
-                    if (lineTrack > 8)
-                        lineTrack = 4;
-                    else
-                        lineTrack++;
-                    for(int x = lineTrack; x < LogiLcd.MonoWidth - 6; x += 6)
-                        g.DrawLine(Pens.Black, new Point(x, 26), new Point(x + 2, 26));
-
+                    if (showAnimatedLines)
+                    {
+                        if (lineTrack > 8)
+                            lineTrack = 4;
+                        else
+                            lineTrack++;
+                        for (int x = lineTrack; x < LogiLcd.MonoWidth - 6; x += 6)
+                            g.DrawLine(Pens.Black, new Point(x, 26), new Point(x + 2, 26));
+                    }
+                    
                     if (status.Playing)
                     {
                         g.FillPolygon(Brushes.White, new Point[] { new Point(3, 42), new Point(3, 32), new Point(8, 37) });
