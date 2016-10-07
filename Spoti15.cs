@@ -200,7 +200,7 @@ namespace Spoti15
         }
 
         //private Byte[] emptyBg = new Byte[LogiLcd.MonoWidth * LogiLcd.MonoHeight];
-
+        private int lineTrack = 4;
         public void UpdateLcd()
         {
             if (initExcpt != null)
@@ -235,8 +235,18 @@ namespace Spoti15
                     DrawTextScroll(g, 1, status.Track.TrackResource.Name);
                     DrawTextScroll(g, 3, String.Format("{0}:{1:D2} / {2}:{3:D2}", pos / 60, pos % 60, len / 60, len % 60));
 
+                    // draw progress bar
                     g.DrawRectangle(Pens.White, 3, 24, LogiLcd.MonoWidth - 6, 4);
                     g.FillRectangle(Brushes.White, 3, 24, (int)((LogiLcd.MonoWidth - 6) * perc), 4);
+
+                    // draw stylistic pattern lines within progress bar
+
+                    if (lineTrack > 8)
+                        lineTrack = 4;
+                    else
+                        lineTrack++;
+                    for(int x = lineTrack; x < LogiLcd.MonoWidth - 6; x += 6)
+                        g.DrawLine(Pens.Black, new Point(x, 26), new Point(x + 2, 26));
 
                     if (status.Playing)
                     {
