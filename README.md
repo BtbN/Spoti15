@@ -2,7 +2,7 @@
 ### A Spotify Applet for the Logitech G15/G510S
 
 ---
-![example gif](http://gifimgs.com/res/1016/57f883e446259953890092.gif)
+![example gif](https://thumbs.gfycat.com/HalfSpanishDutchshepherddog-size_restricted.gif)
 ---
  The original developer has abandoned the project so I've kept this applet updated to work with the latest version of [SpotifyAPI-NET](https://github.com/JohnnyCrazy/SpotifyAPI-NET).
  
@@ -36,8 +36,8 @@ Currently, two things can be toggled within Spoti15; album name display, and ani
 ![album off](http://i.imgur.com/s2nsfy4.png)
 
 ### Toggling Animated Lines ON/OFF
-![lines on](http://i.imgur.com/s2nsfy4.png)
-![lines off](http://i.imgur.com/idsEOtF.png)
+![lines on](http://i.imgur.com/RcnTdDe.png)
+![lines off](http://i.imgur.com/eElJoBx.png)
 
 ### *Changelog:*
 ```
