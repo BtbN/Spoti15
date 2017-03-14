@@ -41,6 +41,10 @@ Currently, two things can be toggled within Spoti15; album name display, and ani
 
 ### *Changelog:*
 ```
+v1.0.0.15 [MARCH 13 2017]
+ + Updated  SpotifyAPI-NET DLL's to Latest Version
+ + Support for latest version of Spotify (Tested on 1.0.50.41368.gbd68dbef)
+
 v1.0.0.14 [OCTOBER 08 2016]
   + '&' now displays properly instead of displaying as '_'
   + Button 2 now toggles animated lines in progress bar
