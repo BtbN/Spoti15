@@ -41,6 +41,10 @@ Currently, two things can be toggled within Spoti15; album name display, and ani
 
 ### *Changelog:*
 ```
+v1.0.0.16 [April 28 2018]
+ + Updated SpotifyAPI-NET to 2.18.1
+ + Support for 1.0.77.338.g758ebd78
+
 v1.0.0.15 [MARCH 13 2017]
  + Updated  SpotifyAPI-NET DLL's to Latest Version
  + Support for latest version of Spotify (Tested on 1.0.50.41368.gbd68dbef)
